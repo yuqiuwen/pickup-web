@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anniversary App</title>
+    <style>
+        /* --- 1. 核心设计系统 (Design System) --- */
+        :root {
+            --bg-color: #050505;
+            --card-bg: #121212;
+            --card-border: #2a2a2a;
+            --accent-primary: #ffffff;
+            --accent-secondary: #888888;
+            --highlight: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+            --highlight-gold: linear-gradient(45deg, #D4AF37 0%, #C5A028 100%);
+            --danger: #ff4757;
+            --success: #2ed573;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 8px;
+            --nav-height: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--accent-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden; /* 防止整体滚动，由内部容器滚动 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- 2. 布局容器与视图切换 --- */
+        .app-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px; /* 限制最大宽度，模拟App体验 */
+            margin: 0 auto;
+        }
+
+        .view-section {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            padding: 20px 20px 90px 20px; /* 底部留出导航栏高度 */
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .view-section.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        /* 隐藏滚动条 */
+        .view-section::-webkit-scrollbar { display: none; }
+
+        /* --- 3. 组件样式 --- */
+        h1 { font-size: 24px; margin-bottom: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        h2 { font-size: 18px; margin-bottom: 15px; color: var(--accent-secondary); font-weight: 500; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        /* 首页大卡片 */
+        .hero-card {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #121212 100%);
+        }
+        .hero-days {
+            font-size: 64px;
+            font-weight: 800;
+            background: var(--highlight);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+            margin: 10px 0;
+        }
+
+        /* 列表项卡片 */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        .list-item:active { transform: scale(0.98); }
+        .item-info h3 { font-size: 16px; margin-bottom: 4px; }
+        .item-info p { font-size: 12px; color: var(--accent-secondary); }
+        .item-days {
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--accent-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            color: #000;
+        }
+        .delete-btn {
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            width: 60px;
+            background: var(--danger);
+            border-top-right-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .list-item:hover .delete-btn {
+            /* 桌面端悬停效果，移动端可用左滑交互逻辑(此处简化为点击删除按钮) */
+        }
+
+        /* 表单控件 */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; color: var(--accent-secondary); margin-bottom: 8px; font-size: 14px; }
+        .form-input {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: white;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus { border-color: #666; }
+        
+        .btn-primary {
+            width: 100%;
+            background: white;
+            color: black;
+            border: none;
+            padding: 16px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+        }
+        .btn-primary:active { transform: scale(0.96); }
+
+        /* 设置开关 */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #222;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* --- 4. 底部导航栏 --- */
+        .nav-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--nav-height);
+            background: rgba(18, 18, 18, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #222;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--accent-secondary);
+            font-size: 10px;
+            cursor: pointer;
+            transition: color 0.3s;
+            width: 60px;
+        }
+
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
+        .nav-item.active { color: var(--accent-primary); }
+        
+        /* 中间的添加按钮 */
+        .nav-add-btn {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            transform: translateY(-10px);
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
+        .nav-add-btn svg { width: 24px; height: 24px; fill: black; margin:0; }
+
+        /* 简单的空状态 */
+        .empty-state { text-align: center; color: #444; margin-top: 50px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- === 视图 1: 首页 (Dashboard) === -->
+        <div id="view-home" class="view-section active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="margin:0; font-size:14px;">Good Evening</h2>
+                    <h1 style="margin:0;">我的纪念日</h1>
+                </div>
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: #333; overflow: hidden;">
+                    <!-- 头像占位 -->
+                    <img src="https://api.dicebear.com/7.x/miniavs/svg?seed=love" alt="avatar" style="width:100%;">
+                </div>
+            </div>
+
+            <!-- 核心倒计时卡片 -->
+            <div class="card hero-card">
+                <p style="color:var(--accent-secondary); letter-spacing: 2px; font-size: 12px;">我们已经在一起</p>
+                <div class="hero-days" id="main-timer">0</div>
+                <p style="color:var(--accent-secondary);">DAYS</p>
+                <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;" id="start-date-display">Since 2022.05.20</div>
+            </div>
+
+            <!-- 概览小组件 -->
+            <h2 style="margin-top: 30px;">即将到来</h2>
+            <div id="upcoming-preview">
+                <!-- 动态插入 -->
+            </div>
+        </div>
+
+        <!-- === 视图 2: 列表页 (List) === -->
+        <div id="view-list" class="view-section">
+            <h1>所有纪念日</h1>
+            <div id="anniversary-list-container">
+                <!-- 列表内容动态生成 -->
+            </div>
+        </div>
+
+        <!-- === 视图 3: 添加页 (Add) === -->
+        <div id="view-add" class="view-section">
+            <h1>添加新纪念日</h1>
+            <form id="add-form" onsubmit="handleFormSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" class="form-input" id="input-title" placeholder="例如：她的生日、第一次旅行" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">日期</label>
+                    <input type="date" class="form-input" id="input-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">类型</label>
+                    <select class="form-input" id="input-type">
+                        <option value="anniversary">纪念日 (累计天数)</option>
+                        <option value="birthday">生日/倒计时 (每年重复)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注 (可选)</label>
+                    <input type="text" class="form-input" id="input-note" placeholder="写点什么...">
+                </div>
+                <button type="submit" class="btn-primary">保存纪念日</button>
+            </form>
+        </div>
+
+        <!-- === 视图 4: 设置页 (Settings) === -->
+        <div id="view-settings" class="view-section">
+            <h1>设置</h1>
+            
+            <div class="card">
+                <h2 style="font-size: 16px; color: white; margin-bottom: 20px;">通知配置</h2>
+                <div class="setting-row">
+                    <span>纪念日当天提醒</span>
+                    <label class="switch">
+                        <input type="checkbox" checked id="notify-day-of">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>提前一天提醒</span>
+                    <label class="switch">
+                        <input type="checkbox" id="notify-day-before">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">需允许浏览器发送通知权限。</p>
+                <button onclick="requestNotifyPermission()" style="margin-top:10px; background:none; border:1px solid #333; color:#888; padding:5px 10px; border-radius:8px; font-size:12px;">测试/请求权限</button>
+            </div>
+
+            <div class="card">
+                <h2 style="font-size: 16px; color: white; margin-bottom: 20px;">数据管理</h2>
+                <button onclick="clearAllData()" style="color: var(--danger); background: transparent; border: none; font-size: 14px;">清空所有数据</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 底部导航栏 -->
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="switchView('home', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            首页
+        </div>
+        <div class="nav-item" onclick="switchView('list', this)">
+            <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+            列表
+        </div>
+        <div class="nav-add-btn" onclick="switchView('add', null)">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </div>
+        <div class="nav-item" onclick="switchView('settings', this)">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            设置
+        </div>
+    </nav>
+
+    <script>
+        // --- 1. 数据管理模块 ---
+        const STORAGE_KEY = 'anniversary_app_data';
+        
+        // 默认数据（如果是第一次打开）
+        const defaultData = [
+            { id: 1, title: '我们在一起', date: '2022-05-20', type: 'anniversary', isMain: true },
+            { id: 2, title: '你的生日', date: '2000-11-15', type: 'birthday', isMain: false }
+        ];
+
+        let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            refreshViews(); // 数据变动后刷新界面
+        }
+
+        // --- 2. 逻辑计算模块 ---
+        function getDaysDiff(dateString, type) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const targetDate = new Date(dateString);
+            targetDate.setHours(0,0,0,0);
+
+            if (type === 'anniversary') {
+                // 计算已经过去了多少天
+                const diffTime = today - targetDate;
+                return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            } else {
+                // 计算倒计时（下一个纪念日/生日）
+                targetDate.setFullYear(today.getFullYear());
+                if (targetDate < today) {
+                    targetDate.setFullYear(today.getFullYear() + 1);
+                }
+                const diffTime = targetDate - today;
+                return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            }
+        }
+
+        // --- 3. 视图渲染模块 ---
+        
+        // 渲染首页
+        function renderHome() {
+            // 找到主纪念日
+            const mainEvent = appData.find(item => item.isMain) || appData[0];
+            if (mainEvent) {
+                const days = getDaysDiff(mainEvent.date, 'anniversary');
+                document.getElementById('main-timer').innerText = days;
+                document.getElementById('start-date-display').innerText = `Since ${mainEvent.date.replace(/-/g, '.')}`;
+            }
+
+            // 渲染即将到来的（取除了主纪念日外的一个）
+            const previewContainer = document.getElementById('upcoming-preview');
+            const others = appData.filter(item => !item.isMain);
+            
+            if (others.length > 0) {
+                // 简单取第一个展示
+                const nextEvent = others[0]; 
+                const daysLeft = getDaysDiff(nextEvent.date, 'birthday');
+                previewContainer.innerHTML = `
+                    <div class="card list-item">
+                        <div class="item-info">
+                            <h3>${nextEvent.title}</h3>
+                            <p>${nextEvent.date} · 每年重复</p>
+                        </div>
+                        <div class="item-days" style="background:#333; color:white;">
+                            ${daysLeft} <span style="font-size:12px">天后</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                previewContainer.innerHTML = `<p style="color:#666; font-size:14px;">暂无更多纪念日，去添加一个吧。</p>`;
+            }
+        }
+
+        // 渲染列表页
+        function renderList() {
+            const container = document.getElementById('anniversary-list-container');
+            container.innerHTML = '';
+
+            if (appData.length === 0) {
+                container.innerHTML = '<div class="empty-state">没有记录</div>';
+                return;
+            }
+
+            appData.forEach((item, index) => {
+                const isAnniversary = item.type === 'anniversary';
+                const days = getDaysDiff(item.date, item.type);
+                const tag = isAnniversary ? '已累计' : '倒计时';
+                
+                const html = `
+                    <div class="card list-item">
+                        <div class="item-info">
+                            <h3>${item.title} ${item.isMain ? '⭐' : ''}</h3>
+                            <p>${item.date} · ${item.note || tag}</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="item-days">${days}</div>
+                            <div style="font-size:10px; color:#666; margin-top:2px;">${isAnniversary ? 'DAYS' : 'DAYS LEFT'}</div>
+                        </div>
+                        ${!item.isMain ? `<div class="delete-btn" onclick="deleteItem(${index})">🗑️</div>` : ''}
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // --- 4. 交互逻辑 ---
+
+        // 切换 Tab
+        function switchView(viewId, navEl) {
+            // 隐藏所有视图
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            // 显示目标视图
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            // 更新底部导航状态
+            if(navEl) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                navEl.classList.add('active');
+            }
+
+            // 如果切换到 Add，重置表单
+            if(viewId === 'add') {
+                document.getElementById('add-form').reset();
+                document.getElementById('input-date').valueAsDate = new Date();
+            }
+        }
+
+        // 处理添加表单提交
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('input-title').value;
+            const date = document.getElementById('input-date').value;
+            const type = document.getElementById('input-type').value;
+            const note = document.getElementById('input-note').value;
+
+            const newItem = {
+                id: Date.now(),
+                title,
+                date,
+                type,
+                note,
+                isMain: false // 默认添加的不是主纪念日
+            };
+
+            appData.push(newItem);
+            saveData();
+            
+            // 添加成功后跳转回列表
+            switchView('list', document.querySelectorAll('.nav-item')[1]);
+        }
+
+        // 删除条目
+        function deleteItem(index) {
+            if(confirm('确定要删除这个纪念日吗？')) {
+                appData.splice(index, 1);
+                saveData();
+            }
+        }
+
+        function clearAllData() {
+            if(confirm('警告：這将清除所有本地数据！')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        // 刷新所有视图数据
+        function refreshViews() {
+            renderHome();
+            renderList();
+        }
+
+        // --- 5. 通知功能 (模拟) ---
+        function requestNotifyPermission() {
+            if (!("Notification" in window)) {
+                alert("此浏览器不支持桌面通知");
+            } else {
+                Notification.requestPermission().then(function (permission) {
+                    if (permission === "granted") {
+                        new Notification("通知已开启", { body: "之后的纪念日我们会提醒你！" });
+                    } else {
+                        alert("权限被拒绝");
+                    }
+                });
+            }
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshViews();
+        });
+
+    </script>
+</body>
+</html>

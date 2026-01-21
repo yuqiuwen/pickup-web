@@ -40,7 +40,7 @@ export function NavMain({ items }: { items: MenuItem[] }) {
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton tooltip={item.title}>
                       <Link href={item.path} className="flex w-full min-w-0 items-center gap-2">
-                        {item.icon && <item.icon className="shrink-0"/>}
+                        {item.icon && <item.icon className="shrink-0 h-5 w-5"/>}
                         <span className="flex-1 truncate">{item.title}</span>
                       </Link>
                       {hasChildren && (

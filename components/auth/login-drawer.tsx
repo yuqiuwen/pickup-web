@@ -41,6 +41,7 @@ import {
   type ResetPasswordValues,
 } from "@/lib/schema/auth";
 import { sendEmailCodeApi } from "@/lib/api/sys";
+import { EmailBizEnum } from "@/lib/constant";
 
 interface LoginDrawerProps {
   open: boolean;
@@ -134,7 +135,7 @@ export function LoginDrawer({
     try {
       setIsSendingCode(true);
       const email = resetForm.getValues("account").trim();
-      await sendEmailCodeApi(email, "set_pwd");
+      await sendEmailCodeApi(email, EmailBizEnum.VERIFY_CODE_SET_PWD);
 
       toast.success("验证码已发送", {
         description: "请查看您的邮箱",

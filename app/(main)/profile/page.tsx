@@ -79,19 +79,8 @@ export default function ProfilePage() {
 
   return (
     <AppLayout>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="">个人中心</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>个人信息设置</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
         {/* 左侧：概览卡片 */}
         <Card className="h-fit">
           <CardHeader>

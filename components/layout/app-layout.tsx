@@ -13,11 +13,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <AppSidebar menuConfig={menuConfig} />
-      <SidebarInset>
-        <SidebarTrigger />
-        <div className="p-6">
+      <SidebarInset className="bg-sidebar">
+      <header className="sticky top-0 z-50 flex h-8 items-center gap-2 bg-sidebar ">
+        <SidebarTrigger/>
+        </header>
+        <div className="py-4 px-6">
           {children}
         </div>
+        
       </SidebarInset>
     </SidebarProvider>
   );

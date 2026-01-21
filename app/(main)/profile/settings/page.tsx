@@ -68,6 +68,7 @@ import {
   ResetPasswordValues,
 } from "@/lib/schema/auth";
 import { rsaEncrypt } from "@/utils/rsa";
+import { EmailBizEnum } from "@/lib/constant";
 
 /** 开关值：严格 off/on */
 type OnOff = "off" | "on";
@@ -256,7 +257,7 @@ export default function SettingsCenter() {
     try {
       await sendEmailCodeApi(
         changePasswordForm.getValues("account"),
-        "set_pwd"
+        EmailBizEnum.VERIFY_CODE_SET_PWD
       );
       toast.success("验证码已发送", {
         description: "请查看您的邮箱",

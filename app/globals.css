@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
  
 @custom-variant dark (&:is(.dark *));
  
@@ -39,9 +40,18 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-anniversary: hsl(var(--anniversary));
+  --color-birthday: hsl(var(--birthday));
+  --color-countdown: hsl(var(--countdown));
+  --color-milestone: hsl(var(--milestone));
+  --color-capsule: hsl(var(--capsule));
 }
  
 :root {
+  font-family: var(--font-inter), var(--font-cjk), system-ui, -apple-system,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+    
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -74,6 +84,29 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+
+  /* Custom Colors for Event Types */
+  --anniversary: 340 75% 65%;
+  --birthday: 25 95% 60%;
+  --countdown: 200 80% 55%;
+  --milestone: 280 70% 60%;
+  --capsule: 165 70% 45%;
+  
+
+  /* Gradient Tokens */
+  --gradient-warm: linear-gradient(135deg, hsl(12 76% 61%) 0%, hsl(35 90% 65%) 100%);
+  --gradient-soft: linear-gradient(135deg, hsl(30 40% 98%) 0%, hsl(35 30% 93%) 100%);
+  --gradient-coral: linear-gradient(135deg, hsl(340 75% 65%) 0%, hsl(12 76% 61%) 100%);
+  --gradient-sunset: linear-gradient(135deg, hsl(25 95% 60%) 0%, hsl(340 75% 65%) 100%);
+  --gradient-ocean: linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(165 70% 45%) 100%);
+
+  /* Shadow Tokens */
+  --shadow-soft: 0 2px 8px -2px hsl(20 25% 15% / 0.08);
+  --shadow-medium: 0 4px 16px -4px hsl(20 25% 15% / 0.12);
+  --shadow-warm: 0 8px 24px -8px hsl(12 76% 61% / 0.25);
+  --shadow-card: 0 1px 3px hsl(20 25% 15% / 0.04), 0 4px 12px hsl(20 25% 15% / 0.06);
+
 }
  
 .dark {
@@ -100,6 +133,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -116,5 +150,76 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'Noto Serif SC', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Serif SC', serif;
+  }
+}
+
+
+
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl;
+    box-shadow: var(--shadow-card);
+  }
+
+  .coral-gradient {
+    background: var(--gradient-coral);
+  }
+
+  .sunset-gradient {
+    background: var(--gradient-sunset);
+  }
+
+  .ocean-gradient {
+    background: var(--gradient-ocean);
+  }
+
+
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.5s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }

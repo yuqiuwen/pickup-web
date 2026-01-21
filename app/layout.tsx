@@ -1,15 +1,37 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./App.css"
 import { AuthProvider } from "@/contexts/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import Providers from "./providers";
+import "./globals.css";
+import { Inter, Noto_Sans_SC } from "next/font/google";
+
+import "@/utils/dayjs";
+
 
 export const metadata: Metadata = {
-  title: "Pickup Web - 生产级前端应用",
+  title: "Pickup",
   description:
-    "基于 Next.js 16.1.1 + TailwindCSS + shadcn 构建的生产级前端项目",
+    "拾念",
 };
+
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const notoSansSC = Noto_Sans_SC({
+  // 注意：中文字体通常没有 subsets 可选，体积会更大，尽量少选 weight
+  weight: ["400", "500", "600"],
+  variable: "--font-cjk",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -17,12 +39,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" className={`${inter.variable} ${notoSansSC.variable}`}>
       <body>
+        <Providers>
         <AuthProvider>
             {children}
             <Toaster position="top-center" />
         </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

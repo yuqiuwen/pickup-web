@@ -31,6 +31,7 @@ import { signupSchema, SignupValues } from "@/lib/schema/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PasswordInput } from "../custom/password-input";
 import Link from "next/link";
+import { EmailBizEnum } from "@/lib/constant";
 
 interface RegisterDrawerProps {
   open: boolean;
@@ -94,7 +95,7 @@ export function RegisterDrawer({
     if (!ok) return;
     setIsSendingCode(true);
     try {
-      await sendEmailCodeApi(form.getValues("account"), "sign");
+      await sendEmailCodeApi(form.getValues("account"), EmailBizEnum.VERIFY_CODE_LOGIN);
       toast.success("验证码已发送", {
         description: "请查看您的邮箱",
       });

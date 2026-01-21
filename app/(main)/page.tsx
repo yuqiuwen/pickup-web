@@ -37,7 +37,7 @@ export default function HomePage() {
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900">欢迎来到 Pickup</h1>
               <p className="mt-4 text-lg text-gray-600">
-                一个简洁高效的任务管理和纪念日提醒系统
+              俯首拾念，岁月生花
               </p>
             </div>
             <div className="flex gap-4">

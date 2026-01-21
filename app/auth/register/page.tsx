@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { sendEmailCodeApi } from '@/lib/api/sys';
 import { rsaEncrypt } from '@/utils/rsa';
 import { useRSAKeyStore } from '@/stores/rsa-key-store';
+import { EmailBizEnum } from '@/lib/constant';
 
 export default function RegisterPage() {
   
@@ -62,7 +63,7 @@ export default function RegisterPage() {
 
     setIsSendingCode(true);
     try {
-      await sendEmailCodeApi(email, 'sign');
+      await sendEmailCodeApi(email, EmailBizEnum.VERIFY_CODE_LOGIN);
       toast.success('验证码已发送', {
         description: '请查看您的邮箱',
       });

@@ -40,7 +40,7 @@ export function AppSidebar({ menuConfig }: { menuConfig: MenuItem[] }) {
 
   const teams = [
     {
-      name: "PickUP",
+      name: "Pickup",
       logo: Rose,
       plan: "",
     },

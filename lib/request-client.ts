@@ -99,6 +99,7 @@ class RequestClient {
           // 而在node.js中是 http.ClientRequest 的实例
           // message.error('None response! Please retry.');
         } else {
+          console.log(error)
           toast.error('Request error, please retry.');
         }
         return Promise.reject(error);

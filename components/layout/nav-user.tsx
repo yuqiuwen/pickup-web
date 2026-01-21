@@ -108,7 +108,7 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={viewProfile}>
                 <BadgeCheck />
-                Account
+                Profile
               </DropdownMenuItem>
               {/* <DropdownMenuItem>
                 <CreditCard />

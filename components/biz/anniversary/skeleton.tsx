@@ -10,8 +10,7 @@ export function StatsRowSkeleton() {
             <Skeleton className="h-4 w-16" />
           </CardHeader>
           <CardContent className="space-y-2">
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
       ))}

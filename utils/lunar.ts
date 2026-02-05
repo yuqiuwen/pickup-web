@@ -111,8 +111,7 @@ export function lunarToSolar(
   try {
     const lunarDay = LunarDay.fromYmd(year, month, day);
     const solar = lunarDay.getSolarDay();
-    console.log(isLeap);
-    
+
     const _mon_exp = !isLeap ? solar.getMonth() - 1 : solar.getMonth()
     
     return new Date(solar.getYear(), _mon_exp, solar.getDay());

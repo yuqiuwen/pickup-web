@@ -1,5 +1,6 @@
 import { CalendarType, EventType, MediaType, ReminderChannel, RepeatType, ShareMode } from "@/lib/constant";
 import {MediaItem, TagItem} from '@/types/common'
+import { User } from "./auth";
 
 export interface ReminderSlot {
     offset_days: number;
@@ -48,8 +49,6 @@ export interface ReminderSlot {
     type: EventType;
     share_mode: ShareMode;
     location?: string;
-    tags: TagItem[];
-    media: MediaItem[];
     is_reminder: boolean;
     remind_rule?: ReminderRule;
     repeat_type: RepeatType;
@@ -63,6 +62,11 @@ export interface ReminderSlot {
     lunar_is_leap: boolean
     created_at: string;
     updated_at: string;
+
+    tags: TagItem[];
+    medias: MediaItem[];
+    owner: User
+    user: User
   } 
   
   export interface Milestone {
@@ -105,7 +109,7 @@ export interface ReminderSlot {
   export interface AnnivStat {
     year_total: number;
     share_total: number
-    next_anniv?: Anniversary
+    next_anniv?: Anniversary[]
   }
 
   export interface Stats {

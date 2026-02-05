@@ -6,7 +6,7 @@ import {
   Heart,
   MessageCircle,
   Bookmark,
-  Share2,
+  Share,
   MoreHorizontal,
   Flag,
   Copy,
@@ -177,7 +177,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="sm" onClick={onShare}>
-              <Share2 className="h-5 w-5" />
+              <Share className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>

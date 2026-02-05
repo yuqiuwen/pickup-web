@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/biz/common/UserAvatar";
 
 export interface CommentUser {
   id: string;
@@ -83,7 +84,7 @@ const CommentItem: React.FC<{
     <div className={cn("flex gap-3", isReply && "ml-12")}>
       <Avatar className="h-8 w-8 flex-shrink-0">
         <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
-        <AvatarFallback>{comment.user.name[0]}</AvatarFallback>
+        <AvatarFallback className="bg-[#e9638f] text-white">{comment.user.name[0]}</AvatarFallback>
       </Avatar>
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
@@ -226,10 +227,8 @@ export const EventComments: React.FC<EventCommentsProps> = ({
         {/* 评论输入框 */}
         {currentUser && (
           <div className="flex gap-3">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-              <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={currentUser} size={30}/>
+        
             <div className="flex-1 space-y-2">
               {replyTo && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

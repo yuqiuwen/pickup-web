@@ -8,6 +8,7 @@ import { RegisterDrawer } from '@/components/auth/register-drawer';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function HomePage() {
   const { 
@@ -23,7 +24,7 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg">加载中...</div>
+        <Spinner />
       </div>
     );
   }

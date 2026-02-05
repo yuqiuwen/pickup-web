@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Heart, Cake, Clock } from "lucide-react";
-import { EventType } from "@/lib/constant";
+import { EventType, eventTypeColorMap } from "@/lib/constant";
 
 interface EventBadgeProps {
   type: EventType;
@@ -45,7 +45,8 @@ export function EventBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border font-medium",
+        "inline-flex items-center rounded-full  font-medium",
+        `bg-${eventTypeColorMap[type]}`,
         config.className,
         sizeConfig[size],
         className

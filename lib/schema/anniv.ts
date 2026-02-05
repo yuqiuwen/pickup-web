@@ -93,7 +93,7 @@ export const annivFormSchema = z.object({
 
   export const annivQueryFormSchema = z.object({
     name: z.string().optional(),
-    event_year: z.string().min(1, "请选择年份"),
+    event_year: z.string().optional(),
     type: z.string().optional(),   // EventType
     share_mode: z.enum(ShareMode).optional(),
     order_by: z.enum(['default', 'next_trigger_at.asc', 'next_trigger_at.desc']).optional()

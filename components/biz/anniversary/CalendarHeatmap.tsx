@@ -1,27 +1,85 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getLunarDayText } from "@/utils/lunar";
 import type { Anniversary } from "@/types/anniv";
+import { EventType, eventTypeColorMap } from "@/lib/constant";
+import { dayjs } from "@/utils/dayjs";
 
 interface CalendarHeatmapProps {
   anniversaries: Anniversary[];
   view: "year" | "month" | "week";
+  onDateFilter?: (date: Date | null) => void;
+  onMonthFilter?: (year: number, month: number | null) => void;
+  selectedDate?: Date | null;
+  selectedMonth?: { year: number; month: number } | null;
 }
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
-const MONTHS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+const MONTHS = [
+  "1月",
+  "2月",
+  "3月",
+  "4月",
+  "5月",
+  "6月",
+  "7月",
+  "8月",
+  "9月",
+  "10月",
+  "11月",
+  "12月",
+];
 
-export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
+export function CalendarHeatmap({
+  anniversaries,
+  view,
+  onDateFilter,
+  onMonthFilter,
+  selectedDate,
+  selectedMonth,
+}: CalendarHeatmapProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    return anniversaries.filter((a) => a.event_date === dateStr);
+    return anniversaries.filter((a) => {
+      const dateStr = date.toISOString();
+      return dayjs(a.next_trigger_at).tz(a.tz).toISOString() === dateStr;
+    });
+  };
+
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentDate(today);
+    // Clear any filters when going to today
+    onDateFilter?.(null);
+    onMonthFilter?.(today.getFullYear(), null);
+  };
+
+  const handleDayClick = (date: Date) => {
+    if (selectedDate && selectedDate.toDateString() === date.toDateString()) {
+      // Deselect if clicking same date
+      onDateFilter?.(null);
+    } else {
+      onDateFilter?.(date);
+    }
+  };
+
+  const handleMonthClick = (monthIndex: number) => {
+    if (
+      selectedMonth &&
+      selectedMonth.year === currentYear &&
+      selectedMonth.month === monthIndex
+    ) {
+      // Deselect if clicking same month
+      onMonthFilter?.(currentYear, null);
+    } else {
+      onMonthFilter?.(currentYear, monthIndex);
+    }
   };
 
   // Get color based on event types
@@ -29,11 +87,7 @@ export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
     if (events.length === 0) return "";
     const types = [...new Set(events.map((e) => e.type))];
     if (types.length === 1) {
-      switch (types[0]) {
-        case 1: return "bg-anniversary";
-        case 2: return "bg-birthday";
-        case 3: return "bg-countdown";
-      }
+      return `bg-${eventTypeColorMap[types[0]]}`;
     }
     return "bg-gradient-to-br from-anniversary via-birthday to-countdown";
   };
@@ -66,25 +120,30 @@ export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
+
     return (
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigateMonth(-1)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h3 className="text-lg font-semibold">
             {currentYear}年 {currentMonth + 1}月
           </h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigateMonth(1)}
-          >
+          {!isCurrentMonth && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToToday}
+              className="h-7 px-2 text-xs"
+            >
+              <CalendarDays className="h-3 w-3 mr-1" />
+              今天
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)}>
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
@@ -111,34 +170,66 @@ export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
             const events = getEventsForDate(date);
             const isToday = date.getTime() === today.getTime();
             const colorClass = getDateColor(events);
+            const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
 
             const lunarText = getLunarDayText(date);
-            const isTermOrFirstDay = lunarText.includes("月") || 
-              ["立春", "雨水", "惊蛰", "春分", "清明", "谷雨", 
-               "立夏", "小满", "芒种", "夏至", "小暑", "大暑",
-               "立秋", "处暑", "白露", "秋分", "寒露", "霜降",
-               "立冬", "小雪", "大雪", "冬至", "小寒", "大寒"].includes(lunarText);
+            const isTermOrFirstDay =
+              lunarText.includes("月") ||
+              [
+                "立春",
+                "雨水",
+                "惊蛰",
+                "春分",
+                "清明",
+                "谷雨",
+                "立夏",
+                "小满",
+                "芒种",
+                "夏至",
+                "小暑",
+                "大暑",
+                "立秋",
+                "处暑",
+                "白露",
+                "秋分",
+                "寒露",
+                "霜降",
+                "立冬",
+                "小雪",
+                "大雪",
+                "冬至",
+                "小寒",
+                "大寒",
+              ].includes(lunarText);
 
             return (
               <button
                 key={date.toISOString()}
+                onClick={() => handleDayClick(date)}
                 className={cn(
-                  "aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all hover:scale-105 min-h-[56px]",
-                  isToday && "ring-2 ring-primary ring-offset-2",
+                  "aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all hover:scale-105 min-h-[32px]",
+                  isToday && "ring-1 ring-primary ring-offset-1",
+                  isSelected && "ring-1 ring-primary ring-offset-1 scale-105",
                   colorClass ? `${colorClass} text-white` : "bg-muted/50 hover:bg-muted"
                 )}
               >
-                <span className={cn(
-                  "text-sm font-medium leading-none",
-                  !colorClass && "text-foreground"
-                )}>
+                <span
+                  className={cn(
+                    "text-sm font-medium leading-none",
+                    !colorClass && "text-foreground"
+                  )}
+                >
                   {date.getDate()}
                 </span>
-                <span className={cn(
-                  "text-[10px] leading-none",
-                  colorClass ? "opacity-80" : "text-muted-foreground",
-                  isTermOrFirstDay && !colorClass && "text-primary font-medium"
-                )}>
+                <span
+                  className={cn(
+                    "text-[10px] leading-none",
+                    colorClass ? "opacity-80" : "text-muted-foreground",
+                    isTermOrFirstDay &&
+                      !colorClass &&
+                      "text-primary font-medium"
+                  )}
+                >
                   {lunarText}
                 </span>
                 {events.length > 0 && (
@@ -170,6 +261,9 @@ export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
     );
   }
 
+  const today = new Date();
+  const isCurrentYear = today.getFullYear() === currentYear;
+  
   // Year view - compact heatmap style
   return (
     <div className="space-y-4">
@@ -182,6 +276,19 @@ export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <h3 className="text-lg font-semibold">{currentYear}年</h3>
+
+        {!isCurrentYear && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToToday}
+              className="h-7 px-2 text-xs"
+            >
+              <CalendarDays className="h-3 w-3 mr-1" />
+              今天
+            </Button>
+          )}
+
         <Button
           variant="ghost"
           size="icon"
@@ -191,28 +298,42 @@ export function CalendarHeatmap({ anniversaries, view }: CalendarHeatmapProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-12 gap-2">
+      <div className="grid grid-cols-6 gap-y-6 gap-x-2">
         {MONTHS.map((month, monthIndex) => {
-          const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
           const monthEvents = anniversaries.filter((a) => {
-            const date = new Date(a.event_date);
-            return date.getFullYear() === currentYear && date.getMonth() === monthIndex;
+            const trigger = dayjs(a.next_trigger_at).tz(a.tz);
+            return (
+                trigger.year() === currentYear &&
+                trigger.month() === monthIndex
+            );
           });
 
+          const isSelected =
+            selectedMonth &&
+            selectedMonth.year === currentYear &&
+            selectedMonth.month === monthIndex;
+
           return (
-            <div key={month} className="text-center">
+            <button
+              key={month}
+              className={cn(
+                "text-center transition-all hover:scale-105",
+                isSelected && "ring-1 ring-primary ring-offset-1 rounded-lg"
+              )}
+              onClick={() => handleMonthClick(monthIndex)}
+            >
               <div className="text-xs text-muted-foreground mb-1">{month}</div>
               <div
                 className={cn(
-                  "h-8 rounded-md flex items-center justify-center text-xs font-medium",
+                  "h-8 rounded-md flex items-center justify-center text-xs font-medium cursor-pointer",
                   monthEvents.length > 0
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted/30"
+                    ? "bg-primary/20 text-primary hover:bg-primary/30"
+                    : "bg-muted/30 hover:bg-muted/50"
                 )}
               >
                 {monthEvents.length > 0 && monthEvents.length}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

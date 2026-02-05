@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -20,6 +20,10 @@ import {
   ChevronDown,
   Sparkles,
   CalendarIcon,
+  Check,
+  Users2,
+  User,
+  Search,
 } from "lucide-react";
 import {
   Form,
@@ -74,22 +78,49 @@ import { DatePicker } from "@/components/custom/date-picker-field";
 import LunarDatePicker from "@/components/custom/LunarPicker/LunarDatePicker";
 import { lunarToSolar } from "@/utils/lunar";
 import dayjs from "dayjs";
+import { getAnnivItemApi } from "@/lib/api/anniv";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import { useGroupMemberSearch } from "@/hooks/use-group";
+import { ShareGroup, SimpleUser } from "@/types/auth";
+import { UserGroupSelect } from "@/components/biz/common/UserGroupSelect";
+
+
+interface ExternalUser {
+  account: string;
+  account_type: "email";
+}
 
 export function AnniversaryForm({
   mode,
+  id,
   onClose,
+  refresh,
 }: {
   mode: FormMode;
-  onClose: () => void;
+  id?: string;
+  onClose?: () => void;
+  refresh?: () => void;
 }) {
   const [reminderSlots, setReminderSlots] = useState<
     Array<{ offset_days: number; trigger_time: string }>
   >([{ offset_days: 0, trigger_time: "09:00" }]);
   const [reminderChannels, setReminderChannels] = useState<number[]>([1]);
-  const [inviteEmails, setInviteEmails] = useState<string[]>([]);
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<SimpleUser[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<ShareGroup[]>([]);
+  const [externalUsers, setExternalUsers] = useState<ExternalUser[]>([]);
   const [emailInput, setEmailInput] = useState("");
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [tags, setTags] = useState<TagItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
 
   const { createAnniv } = useAnniv();
 
@@ -116,6 +147,73 @@ export function AnniversaryForm({
 
   const annivType = useWatch({ control: form.control, name: "type" });
 
+
+  const handleAddEmail = () => {
+    const email = emailInput.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      email &&
+      emailRegex.test(email) &&
+      !externalUsers.some((u) => u.account === email)
+    ) {
+      setExternalUsers([
+        ...externalUsers,
+        { account: email, account_type: "email" },
+      ]);
+      setEmailInput("");
+    }
+  };
+
+  const handleRemoveEmail = (email: string) => {
+    setExternalUsers(externalUsers.filter((u) => u.account !== email));
+  };
+
+  useEffect(() => {
+    if (!id) return;
+
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const { data } = await getAnnivItemApi(id);
+        if (cancelled) return;
+        if (data) {
+          const values: AnnivFormValues = {
+            name: data.name,
+            description: data.description,
+            event_date: data.event_date,
+            event_time: data.event_time,
+            calendar_type: data.calendar_type,
+            type: data.type.toString(),
+            share_mode: data.share_mode ?? ShareMode.PRIVATE,
+            location: data.location ?? "",
+            is_reminder: data.is_reminder,
+            email_remind: data.email_remind,
+            is_public: data.is_public,
+            repeat_type: data.repeat_type ?? RepeatType.YEARLY,
+            event_lunar_date:
+              data.calendar_type === CalendarType.LUNAR
+                ? {
+                  year: data.lunar_year,
+                  month: data.lunar_month,
+                  day: data.lunar_day,
+                  isLeapMonth: data.lunar_is_leap,
+                }
+                : null,
+          };
+
+          form.reset(values);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, form]);
   function isValidDate(date: Date | undefined) {
     if (!date) {
       return false;
@@ -135,14 +233,6 @@ export function AnniversaryForm({
       form.setValue("repeat_type", RepeatType.YEARLY);
     }
   }, [annivType, form]);
-
-  const handleAddEmail = () => {
-    const email = emailInput.trim();
-    if (email && !inviteEmails.includes(email) && email.includes("@")) {
-      setInviteEmails([...inviteEmails, email]);
-      setEmailInput("");
-    }
-  };
 
   const handleAddReminderSlot = () => {
     setReminderSlots([
@@ -172,17 +262,19 @@ export function AnniversaryForm({
       share:
         data.share_mode === ShareMode.PUBLIC
           ? {
-              invite_external_users: inviteEmails,
-              invite_app_users: [],
-              invite_groups: [],
-              message: "",
-            }
+            invite_external_users: externalUsers,
+            invite_app_users: selectedUsers.map(item => item.id),
+            invite_groups: selectedGroups.map(item => item.id),
+            message: inviteMessage,
+          }
           : undefined,
     };
 
-    console.log("Form submitted:", fullData);
 
     await createAnniv(fullData);
+    // onRestForm();
+    // onClose?.();
+    // await refresh?.();
   };
 
   const shareMode = form.watch("share_mode");
@@ -197,7 +289,7 @@ export function AnniversaryForm({
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="">选择一个类型：</FormLabel>
+              <FormLabel className=""></FormLabel>
               <FormControl>
                 <RadioGroup
                   value={field.value}
@@ -211,7 +303,7 @@ export function AnniversaryForm({
                         "flex flex-col items-center gap-2 rounded-xl border-1 p-2 cursor-pointer transition-all",
                         field.value === item.str_value
                           ? `border-${item.color} bg-${item.color} text-gray-100`
-                          : `border-border hover:border-muted-foreground/30 text-${item.color}`
+                          : `border-border hover:border-muted-foreground/500 text-${item.color}`
                       )}
                     >
                       <RadioGroupItem
@@ -346,14 +438,18 @@ export function AnniversaryForm({
                   ref={ref}
                   value={value}
                   onChange={(v) => {
-                    onChange(v) &&
-  
-                      form.setValue(
-                        "event_date",
-                        dayjs(
-                          lunarToSolar(v.year, v.month, v.day, v.isLeapMonth)?.toString()
-                        ).format("YYYY-MM-DD")
-                      );
+                    onChange(v);
+                    form.setValue(
+                      "event_date",
+                      dayjs(
+                        lunarToSolar(
+                          v.year,
+                          v.month,
+                          v.day,
+                          v.isLeapMonth
+                        )?.toString()
+                      ).format("YYYY-MM-DD")
+                    );
                   }}
                   placeholder="请选择农历生日"
                   minYear={1950}
@@ -600,7 +696,7 @@ export function AnniversaryForm({
                       <RadioGroupItem value="0" className="sr-only" />
                       <Lock className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <span className="text-sm font-medium">独享</span>
+                        <span className="text-sm font-medium">个人</span>
                         <p className="text-xs text-muted-foreground">
                           仅自己可见
                         </p>
@@ -630,54 +726,88 @@ export function AnniversaryForm({
           />
 
           {shareMode === ShareMode.PUBLIC && (
-            <div className="space-y-3 pt-2 border-t">
+            <div className="space-y-4">
+              {/* User & Group Search */}
+              <Label>搜索用户或共享组</Label>
+              <UserGroupSelect
+                selectedUsers={selectedUsers}
+                selectedGroups={selectedGroups}
+                onSelectUser={(user) => setSelectedUsers([...selectedUsers, user])}
+                onSelectGroup={(group) => setSelectedGroups([...selectedGroups, group])}
+                onRemoveUser={(user) => setSelectedUsers(selectedUsers.filter(u => u.id !== user.id))}
+                onRemoveGroup={(group) => setSelectedGroups(selectedGroups.filter(g => g.id !== group.id))}
+                placeholder="搜索用户ID、用户名、组ID或组名..." />
+
+
+              {/* Email Invite */}
               <div className="space-y-2">
-                <span className="text-sm font-medium">邀请成员</span>
-                <div className="flex flex-wrap gap-2">
-                  {inviteEmails.map((email) => (
-                    <Badge
-                      key={email}
-                      variant="secondary"
-                      className="gap-1 pr-1.5"
-                    >
-                      <Mail className="h-3 w-3" />
-                      {email}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setInviteEmails(
-                            inviteEmails.filter((e) => e !== email)
-                          )
-                        }
-                        className="ml-1 hover:text-destructive"
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  邮箱邀请
+                </span>
+
+                {externalUsers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {externalUsers.map((user) => (
+                      <Badge
+                        key={user.account}
+                        variant="outline"
+                        className="gap-1 pr-1.5"
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                  <div className="flex items-center gap-1">
-                    <Input
-                      type="email"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" &&
-                        (e.preventDefault(), handleAddEmail())
-                      }
-                      placeholder="输入邮箱地址"
-                      className="h-7 w-40 text-sm"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleAddEmail}
-                      className="h-7 w-7 p-0"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                        <Mail className="h-3 w-3" />
+                        {user.account}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEmail(user.account)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
                   </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddEmail())
+                    }
+                    placeholder="输入邮箱地址邀请外部用户"
+                    className="h-10 flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleAddEmail}
+                    className="h-10 w-10 shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
+              </div>
+
+              {/* Invite Message */}
+              <div className="space-y-2">
+                <span className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                  邀请消息（可选）
+                </span>
+                <Textarea
+                  value={inviteMessage}
+                  onChange={(e) => setInviteMessage(e.target.value)}
+                  placeholder="给被邀请人发送一条消息..."
+                  className="resize-none"
+                  rows={2}
+                  maxLength={100}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {inviteMessage.length}/100
+                </p>
               </div>
             </div>
           )}
@@ -711,9 +841,9 @@ export function AnniversaryForm({
             type="button"
             variant="outline"
             className="flex-1"
-            onClick={onRestForm}
+            onClick={onClose}
           >
-            重置
+            取消
           </Button>
           <Button
             type="submit"

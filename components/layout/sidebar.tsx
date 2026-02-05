@@ -23,7 +23,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { User, LogOut, Rose, Frame } from "lucide-react";
+import { User, LogOut, Waypoints, Frame } from "lucide-react";
 import { NavUser } from "@/components/layout/nav-user";
 import { TeamSwitcher } from "@/components/layout/team-switcher";
 import { NavMain } from "@/components/layout/nav-main";
@@ -41,7 +41,7 @@ export function AppSidebar({ menuConfig }: { menuConfig: MenuItem[] }) {
   const teams = [
     {
       name: "Pickup",
-      logo: Rose,
+      logo: Waypoints,
       plan: "",
     },
   ];

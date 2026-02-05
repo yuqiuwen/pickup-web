@@ -15,3 +15,16 @@ export const userFormSchema = z.object({
 })
 
 export type UserFormValues = z.infer<typeof userFormSchema>;
+
+
+export const groupSchema = z.object({
+  name: z.string().min(1, "至少1个字符").max(20, "名称最多20个字符"),
+  description: z.string().optional(),
+  cover: z.string().optional(),
+  is_public: z.boolean(),
+  owner_id: z.number().optional(),
+  members: z.array(z.number()).optional()
+ 
+})
+
+export type GroupFormValues = z.infer<typeof groupSchema>;

@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: number;
   username: string;
   account?: string;
   email: string;
@@ -13,15 +13,24 @@ export interface User {
   ctime?: number;
 }
 
+export interface SimpleUser {
+  id: number;
+  username: string;
+  account?: string;
+  avatar?: string;
+  gender?: number;
+  title?: string;
+}
+
 export interface LoginRequest {
   account: string;
   code: string;
-  code_type: 'pwd' | 'code';
-  auth_type?: 1 | 2 | 3 | 4;   // phone / account / email / wechat
+  code_type: "pwd" | "code";
+  auth_type?: 1 | 2 | 3 | 4; // phone / account / email / wechat
 }
 
 export interface RegisterRequest {
-  auth_type: 1 | 2 | 3 | 4;   // phone / account / email / wechat
+  auth_type: 1 | 2 | 3 | 4; // phone / account / email / wechat
   account: string;
   pwd: string;
   username: string;
@@ -39,11 +48,20 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
-
-
 export interface ResetPasswordRequest {
   account: string;
   code: string;
   new_pwd: string;
-  validate_way: 'pwd' | 'code';
+  validate_way: "pwd" | "code";
+}
+
+export interface ShareGroup {
+  id: string;
+  owner_id: number;
+  name: string;
+  description: string;
+  cover: string;
+  max_members: number;
+  is_public: number;
+  member_count: number
 }

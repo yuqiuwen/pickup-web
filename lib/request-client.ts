@@ -70,8 +70,8 @@ class RequestClient {
         // 未授权 - 跳转到登录页
         if (code === ErrorCode.UNAUTHORIZED) {
           this.handleUnauthorized();
-          const error = new Error(errmsg || '未授权，请先登录');
-          toast.error('未授权，请先登录');
+          const error = new Error(errmsg || '请先登录');
+          toast.error('请先登录');
           return Promise.reject(error);
         }
 

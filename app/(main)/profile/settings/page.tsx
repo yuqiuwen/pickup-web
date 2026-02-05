@@ -69,11 +69,12 @@ import {
 } from "@/lib/schema/auth";
 import { rsaEncrypt } from "@/utils/rsa";
 import { EmailBizEnum } from "@/lib/constant";
+import { UpdateUserSettingsApi } from "@/lib/api/user";
 
-/** 开关值：严格 off/on */
-type OnOff = "off" | "on";
-const toOnOff = (checked: boolean): OnOff => (checked ? "on" : "off");
-const toChecked = (value: OnOff | undefined): boolean => value === "on";
+/** 开关值：严格 OFF/on */
+type OnOff = "OFF" | "ON";
+const toOnOff = (checked: boolean): OnOff => (checked ? "ON" : "OFF");
+const toChecked = (value: OnOff | undefined): boolean => value === "ON";
 
 /** ========== Item（设置行）组件 ========== */
 function Item(props: {
@@ -97,7 +98,7 @@ function Item(props: {
   );
 }
 
-/** ========== RHF 开关字段（off/on） ========== */
+/** ========== RHF 开关字段（OFF/on） ========== */
 function OnOffSwitchField(props: {
   form: ReturnType<typeof useForm<any>>;
   name: string;
@@ -105,6 +106,20 @@ function OnOffSwitchField(props: {
   description?: string;
 }) {
   const { form, name, label, description } = props;
+
+  const onChange = async (field, checked) => {
+    const next = toOnOff(checked)     
+    field.onChange(next)
+    const prev = field.prev
+    try {
+      const paylod = [{name, value: next}]
+      await UpdateUserSettingsApi(paylod)
+    } catch (e) {
+      field.onChange(prev)
+    } finally {
+
+    }
+  }
 
   return (
     <FormField
@@ -121,7 +136,9 @@ function OnOffSwitchField(props: {
           <FormControl>
             <Switch
               checked={toChecked(field.value as OnOff)}
-              onCheckedChange={(checked) => field.onChange(toOnOff(checked))}
+              onCheckedChange={(checked) =>  {
+                onChange(field, checked)
+              }}
             />
           </FormControl>
         </ShadcnFormItem>
@@ -162,25 +179,26 @@ type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 
 /** ========== 通知设置 ========== */
 const notificationSchema = z.object({
-  comment: z.enum(["off", "on"]),
-  mention: z.enum(["off", "on"]),
-  likeFav: z.enum(["off", "on"]),
-  newFollow: z.enum(["off", "on"]),
-  anniversaryInvite: z.enum(["off", "on"]),
-  anniversaryReminder: z.enum(["off", "on"]), // 默认开
-  weeklyReport: z.enum(["off", "on"]),
-  monthlyReport: z.enum(["off", "on"]),
+  ntfy_anniv_invite: z.enum(["ON", "OFF"]),
+  ntfy_anniv_remind: z.enum(["ON", "OFF"]),
+  ntfy_comment: z.enum(["ON", "OFF"]),
+  ntfy_like_collect: z.enum(["ON", "OFF"]),
+  ntfy_mention: z.enum(["ON", "OFF"]),
+  ntfy_follow: z.enum(["ON", "OFF"]),
+  ntfy_pickup_week: z.enum(["ON", "OFF"]),
+  ntfy_pickup_month: z.enum(["ON", "OFF"]),
 });
 
 type NotificationValues = z.infer<typeof notificationSchema>;
 
 /** ========== 隐私设置 ========== */
 const privacySchema = z.object({
-  hideMyFollowing: z.enum(["off", "on"]),
-  hideMyFollowers: z.enum(["off", "on"]),
-  // drawer（我的收藏）内
-  favHideAnniversary: z.enum(["off", "on"]),
-  favHideSinian: z.enum(["off", "on"]),
+  privacy_unaccept_anniv_invite: z.enum(["ON", "OFF"]),
+  privacy_hide_follow: z.enum(["ON", "OFF"]),
+  privacy_hide_fan: z.enum(["ON", "OFF"]),
+  privacy_hide_anniv: z.enum(["ON", "OFF"]),
+  privacy_hide_pickup: z.enum(["ON", "OFF"]),
+  privacy_hide_collect: z.enum(["ON", "OFF"]),
 });
 
 type PrivacyValues = z.infer<typeof privacySchema>;
@@ -191,11 +209,23 @@ export default function SettingsCenter() {
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const { user, resetPassword, openLoginDrawer } = useAuth();
+  const { user, userSettings, resetPassword, openLoginDrawer, refreshUserSettings } = useAuth();
 
 
   /** Drawer(Sheet) open state */
   const [favDrawerOpen, setFavDrawerOpen] = useState(false);
+
+  useEffect(() => {
+
+    (async () => {
+        const data = await refreshUserSettings()
+      if (data) {
+        notificationForm.reset(data)
+        privacyForm.reset(data)
+      }
+
+    })()
+  }, [])
 
 
   useEffect(() => {
@@ -227,24 +257,26 @@ export default function SettingsCenter() {
   const notificationForm = useForm<NotificationValues>({
     resolver: zodResolver(notificationSchema),
     defaultValues: {
-      comment: "off",
-      mention: "off",
-      likeFav: "off",
-      newFollow: "off",
-      anniversaryInvite: "off",
-      anniversaryReminder: "on", // 默认开
-      weeklyReport: "off",
-      monthlyReport: "off",
+    ntfy_anniv_invite: "ON",        // 纪念日邀请
+    ntfy_anniv_remind: "ON",        // 纪念日提醒
+    ntfy_comment: "ON",             // 评论
+    ntfy_like_collect: "ON",        // 点赞收藏
+    ntfy_mention: "ON",             // 提及@
+    ntfy_follow: "ON",              // 新增关注
+    ntfy_pickup_week: "ON",         // 拾念周报
+    ntfy_pickup_month: "ON",        // 拾念月报
     },
   });
 
   const privacyForm = useForm<PrivacyValues>({
     resolver: zodResolver(privacySchema),
     defaultValues: {
-      hideMyFollowing: "off",
-      hideMyFollowers: "off",
-      favHideAnniversary: "off",
-      favHideSinian: "off",
+      privacy_unaccept_anniv_invite: "OFF",  // 不接受纪念日邀请
+      privacy_hide_follow: "OFF",            // 隐藏我的关注
+      privacy_hide_fan: "OFF",               // 隐藏我的粉丝
+      privacy_hide_anniv: "OFF",                  // 隐藏纪念日
+      privacy_hide_pickup: "OFF",                 // 隐藏拾念
+      privacy_hide_collect: "OFF"
     },
   });
 
@@ -599,42 +631,42 @@ export default function SettingsCenter() {
                   <form>
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="comment"
+                      name="ntfy_comment"
                       label="评论"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="mention"
+                      name="ntfy_mention"
                       label="@"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="likeFav"
+                      name="ntfy_like_collect"
                       label="点赞收藏"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="newFollow"
+                      name="ntfy_follow"
                       label="新增关注"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="anniversaryInvite"
+                      name="ntfy_anniv_invite"
                       label="纪念日邀请"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="anniversaryReminder"
+                      name="ntfy_anniv_remind"
                       label="纪念日提醒"
                       description="默认开启"
                     />
@@ -642,14 +674,14 @@ export default function SettingsCenter() {
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="weeklyReport"
+                      name="ntfy_pickup_week"
                       label="拾念周报"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={notificationForm}
-                      name="monthlyReport"
+                      name="ntfy_pickup_month"
                       label="拾念月报"
                     />
                   </form>
@@ -662,87 +694,27 @@ export default function SettingsCenter() {
           <TabsContent value="privacy" className="mt-6">
             <div className="rounded-lg border bg-card">
               <div className="px-6">
-                {/* 我的收藏（Drawer/Sheet） */}
-                <Item
-                  title="我的收藏"
-                  description="管理收藏内容的展示方式。"
-                  right={
-                    <Sheet open={favDrawerOpen} onOpenChange={setFavDrawerOpen}>
-                      <SheetTrigger asChild>
-                        <Button variant="outline">打开</Button>
-                      </SheetTrigger>
-                      <SheetContent
-                        side="right"
-                        className="w-[420px] sm:w-[480px]"
-                      >
-                        <SheetHeader>
-                          <SheetTitle>我的收藏</SheetTitle>
-                          <SheetDescription></SheetDescription>
-                        </SheetHeader>
-
-                        <div className="mt-6">
-                          <Form {...privacyForm}>
-                            <form>
-                              <div className="rounded-lg border bg-card px-4">
-                                <OnOffSwitchField
-                                  form={privacyForm}
-                                  name="favHideAnniversary"
-                                  label="隐藏纪念日"
-                                />
-                                <Separator />
-                                <OnOffSwitchField
-                                  form={privacyForm}
-                                  name="favHideSinian"
-                                  label="隐藏拾念"
-                                />
-                              </div>
-
-                              <SheetFooter className="mt-6">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => setFavDrawerOpen(false)}
-                                >
-                                  关闭
-                                </Button>
-                                <Button
-                                  type="button"
-                                  onClick={privacyForm.handleSubmit(
-                                    (values) => {
-                                      console.log(
-                                        "privacy save (from drawer):",
-                                        values
-                                      );
-                                      setFavDrawerOpen(false);
-                                    }
-                                  )}
-                                >
-                                  保存
-                                </Button>
-                              </SheetFooter>
-                            </form>
-                          </Form>
-                        </div>
-                      </SheetContent>
-                    </Sheet>
-                  }
-                />
-
-                <Separator />
 
                 {/* 隐藏我的关注 */}
                 <Form {...privacyForm}>
                   <form>
+                  <OnOffSwitchField
+                      form={privacyForm}
+                      name="privacy_hide_collect"
+                      label="隐藏我的收藏"
+                    />
+                    <Separator />
+
                     <OnOffSwitchField
                       form={privacyForm}
-                      name="hideMyFollowing"
+                      name="privacy_hide_follow"
                       label="隐藏我的关注"
                     />
                     <Separator />
 
                     <OnOffSwitchField
                       form={privacyForm}
-                      name="hideMyFollowers"
+                      name="privacy_hide_fan"
                       label="隐藏我的粉丝"
                     />
                   </form>

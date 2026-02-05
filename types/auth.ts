@@ -65,3 +65,6 @@ export interface ShareGroup {
   is_public: number;
   member_count: number
 }
+
+
+export type TUserSettings = Record<string, string>;

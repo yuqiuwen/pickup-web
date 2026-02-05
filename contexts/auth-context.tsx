@@ -1,34 +1,41 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, LoginRequest, RegisterRequest, ResetPasswordRequest } from '@/types/auth';
+import { User, LoginRequest, RegisterRequest, ResetPasswordRequest, TUserSettings } from '@/types/auth';
 import { authApi } from '@/lib/api/auth';
 import request from '@/lib/request-client';
 import { toast } from "sonner"
 import { useRSAKeyStore } from '@/stores/rsa-key-store';
 import { rsaEncrypt } from '@/utils/rsa';
+import { getUserSettingsApi } from '@/lib/api/user';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  loginDrawerOpen: boolean;
+  registerDrawerOpen: boolean;
+
+  userSettings: TUserSettings | null;
+
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   resetPassword: (data: ResetPasswordRequest, logoutAfterReset?: boolean) => Promise<void>;
-  loginDrawerOpen: boolean;
-  registerDrawerOpen: boolean;
   openLoginDrawer: () => void;
   openRegisterDrawer: () => void;
   closeLoginDrawer: () => void;
   closeRegisterDrawer: () => void;
+
+  refreshUserSettings: () => Promise<TUserSettings>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userSettings, setUserSettings] = useState<TUserSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true);
   const [loginDrawerOpen, setLoginDrawerOpen] = useState(false);
   const [registerDrawerOpen, setRegisterDrawerOpen] = useState(false);
@@ -52,6 +59,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
   }, []);
+
+  const clearUserAllData = () => {
+    setUser(null)
+    setUserSettings(null)
+  }
 
   const login = async (data: LoginRequest) => {
     try {
@@ -86,13 +98,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await authApi.logout();
-      setUser(null);
+      clearUserAllData()
       toast.success('退出成功', {
         "description": '您已安全退出',
       });
     } catch (error) {
       // 即使退出失败也清除本地状态
-      setUser(null);
+      clearUserAllData()
       request.clearToken();
     }
   };
@@ -106,6 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUserSettings = async () => {
+    const { data: settingData } = await getUserSettingsApi()
+    setUserSettings(settingData)
+    return settingData
+  }
   const resetPassword = async (data: ResetPasswordRequest, logoutAfterReset: boolean = true) => {
     try {
       const key = await getPublicKey("user_pwd");
@@ -147,17 +164,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        loginDrawerOpen,
+        registerDrawerOpen,
+        userSettings,
         login,
         register,
         logout,
         refreshUser,
         resetPassword,
-        loginDrawerOpen,
-        registerDrawerOpen,
         openLoginDrawer,
         openRegisterDrawer,
         closeLoginDrawer,
         closeRegisterDrawer,
+        refreshUserSettings,
       }}
     >
       {children}

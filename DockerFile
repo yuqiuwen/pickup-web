@@ -1,0 +1,23 @@
+# 1) build
+FROM node:23-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# 2) run (standalone)
+FROM node:23-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# standalone 输出：.next/standalone + .next/static + public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Next standalone 默认 server.js 在根目录
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+CMD ["node", "server.js"]

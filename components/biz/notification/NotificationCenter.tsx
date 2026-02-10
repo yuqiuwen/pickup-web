@@ -30,6 +30,7 @@ import {
 } from "@/types/notification";
 import { useMessages } from "@/contexts/messages-context";
 import { useAnnounceSection, useCommentMentionSection, useFanSection, useLikeCollectSection, useRemindSection, useSysSection, useUnreadCount } from "@/hooks/use-ntfy";
+import { resetAllUnreadCountApi } from "@/lib/api/notification";
 
 // Mock unread counts
 const initialUnreadCnt: UnReadMsgCnt = {
@@ -87,7 +88,7 @@ export function NotificationCenter() {
     const [activeKey, setActiveKey] = useState<NotifySection | null>(null);
     const { open, setOpen } = useMessages()
 
-    const {data: unread = initialUnreadCnt, isLoading: unreadLoading} = useUnreadCount(open)
+    const {data: unread = initialUnreadCnt, isLoading: unreadLoading, refetch} = useUnreadCount(open)
     const qLikeCollect = useLikeCollectSection(open, activeKey);
     const qCommentMention = useCommentMentionSection(open, activeKey);
     const qFan = useFanSection(open, activeKey);
@@ -112,7 +113,10 @@ export function NotificationCenter() {
         unread.like_cnt + unread.collect_cnt + unread.comment_cnt +
         unread.invite_cnt + unread.mention_cnt;
 
-    const handleReadAll = () => { };
+    const handleReadAll = async () => {
+        await resetAllUnreadCountApi()
+        refetch()
+     };
 
 
     const activeSection = [...sections, ...bottomItems].find((s) => s.key === activeKey);
@@ -127,7 +131,10 @@ export function NotificationCenter() {
                         hasMore={false}
                         loading={false}
                         onLoadMore={() => { }}
-                        onBack={() => setActiveKey(null)}
+                        onBack={() => {
+                            setActiveKey(null)
+                            refetch()
+                        } }
                         onItemClick={() => { }}
                     />
                 ) : (

@@ -2,6 +2,7 @@ import { Heart, Star, MessageCircle, UserPlus, AtSign, UserCheck, Reply } from "
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TAction, type RemindNotifyItem, ACTION_LABELS } from "@/types/notification";
+import { UserAvatar } from "@/components/biz/common/UserAvatar";
 
 interface NotificationItemProps {
   item: RemindNotifyItem;
@@ -54,12 +55,7 @@ export function NotificationItem({ item, onRead }: NotificationItemProps) {
       onClick={() => onRead?.(item)}
     >
       {/* User avatar */}
-      <Avatar className="h-9 w-9 shrink-0">
-        {firstUser?.avatar && <AvatarImage src={firstUser.avatar} />}
-        <AvatarFallback className={cn(style.bg, style.color, "text-xs")}>
-          {firstUser?.username?.charAt(0) || <Icon className="h-4 w-4" />}
-        </AvatarFallback>
-      </Avatar>
+     <UserAvatar user={firstUser}/>
 
       {/* Content */}
       <div className="flex-1 min-w-0">

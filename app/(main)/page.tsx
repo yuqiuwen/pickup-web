@@ -47,6 +47,7 @@ export default function HomePage() {
             </div>
           </div>
         </AppLayout>
+    
         <LoginDrawer 
           open={loginDrawerOpen} 
           onOpenChange={closeLoginDrawer}

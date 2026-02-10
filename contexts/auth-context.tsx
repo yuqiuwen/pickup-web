@@ -52,7 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData = await authApi.getCurrentUser();
           setUser(userData);
         }
-      } finally {
+      } catch {
+        clearUserAllData()
+      } 
+      finally {
         setIsLoading(false);
       }
     };

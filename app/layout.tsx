@@ -12,6 +12,7 @@ import { Inter, Noto_Sans_SC } from "next/font/google";
 import "@/utils/dayjs";
 import { MessagesProvider } from "@/contexts/messages-context";
 import { NotificationCenter } from "@/components/biz/notification/NotificationCenter";
+import AuthDrawers from "@/components/auth/AuthDrawers";
 
 
 export const metadata: Metadata = {
@@ -47,6 +48,8 @@ export default function RootLayout({
           <AuthProvider>
             <MessagesProvider>
               {children}
+
+              <AuthDrawers />
               <Toaster position="top-center" />
 
               <NotificationCenter />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
@@ -13,7 +13,7 @@ import { rsaEncrypt } from '@/utils/rsa';
 import { useRSAKeyStore } from '@/stores/rsa-key-store';
 import { EmailBizEnum } from '@/lib/constant';
 
-export default function RegisterPage() {
+function PageContent() {
   
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -230,3 +230,12 @@ export default function RegisterPage() {
   );
 }
 
+
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageContent />
+    </Suspense>
+  );
+}

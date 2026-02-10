@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   acceptInviteApi,
@@ -57,22 +57,6 @@ function initials(name?: string) {
   return s.slice(0, 1).toUpperCase();
 }
 
-function stateHint(state: number) {
-  switch (state) {
-    case InviteState.PENDING:
-      return "邀请尚未发送完成，暂不可操作。";
-    case InviteState.ACCEPTED:
-      return "你已接受过该邀请。";
-    case InviteState.DECLINED:
-      return "你已拒绝过该邀请。";
-    case InviteState.EXPIRED:
-      return "邀请已过期，请对方重新发送。";
-    case InviteState.CANCELLED:
-      return "邀请已被撤销。";
-    default:
-      return "";
-  }
-}
 
 function fmtDateOnly(dateStr?: string) {
   if (!dateStr) return "-";
@@ -81,8 +65,7 @@ function fmtDateOnly(dateStr?: string) {
 }
 
 
-
-export default function InviteActionPage({ action }: { action: Action }) {
+function PageContent({ action }: { action: Action }) {
   const router = useRouter();
   const sp = useSearchParams();
   const token = sp.get("token");
@@ -342,5 +325,14 @@ export default function InviteActionPage({ action }: { action: Action }) {
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function InviteActionPage({ action }: { action: Action }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageContent action={action}/>
+    </Suspense>
   );
 }

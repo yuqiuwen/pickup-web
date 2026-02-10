@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { rsaEncrypt } from "@/utils/rsa";
 import { useRSAKeyStore } from "@/stores/rsa-key-store";
 
-export default function LoginPage() {
+
+function PageContent() {
   const [account, setAccount] = useState("");
   const [code, setcode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -127,5 +128,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageContent />
+    </Suspense>
   );
 }

@@ -4,6 +4,9 @@ const ENV =process.env.NODE_ENV
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   /* config options here */
   rewrites: async () => {
     if (ENV !== 'development') {

@@ -272,9 +272,9 @@ export function AnniversaryForm({
 
 
     await createAnniv(fullData);
-    // onRestForm();
-    // onClose?.();
-    // await refresh?.();
+    onRestForm();
+    onClose?.();
+    await refresh?.();
   };
 
   const shareMode = form.watch("share_mode");

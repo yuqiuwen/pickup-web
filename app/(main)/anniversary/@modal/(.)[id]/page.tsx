@@ -11,7 +11,7 @@ export default function Page() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
 
-  const id = params.id;
+  const id = params?.id;
   const [anniversary, setAnniversary  ] = useState<AnniversaryItemFeed | null>(null);
 
   

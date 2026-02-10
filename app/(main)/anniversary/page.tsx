@@ -156,7 +156,7 @@ export default function Anniversaries() {
     return itemTime.year() === year && itemTime.month() === month;
   }
 
-  const onChangeCalendarView = (view) => {
+  const onChangeCalendarView = (view: CalendarView) => {
     setCalendarView(view)
   }
 
@@ -259,7 +259,7 @@ export default function Anniversaries() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-0">
-                {annivStatData?.next_anniv.length
+                {annivStatData?.next_anniv?.length
                   ? annivStatData.next_anniv.map((item, index) => (
                     <Item asChild key={item.id} size="sm" className="px-0">
                       <Link href={`/anniversary/${item.id}`}>

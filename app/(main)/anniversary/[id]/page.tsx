@@ -9,6 +9,8 @@ import type { AnniversaryItemFeed } from "@/types/anniv";
 export default function Page() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  if (!params) return null;
+  
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [anniversary, setAnniversary] = useState<AnniversaryItemFeed | null>(null);

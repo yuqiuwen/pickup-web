@@ -95,7 +95,7 @@ export function RegisterDrawer({
     if (!ok) return;
     setIsSendingCode(true);
     try {
-      await sendEmailCodeApi(form.getValues("account"), EmailBizEnum.VERIFY_CODE_LOGIN);
+      await sendEmailCodeApi(form.getValues("account"), EmailBizEnum.VERIFY_CODE_SIGN);
       toast.success("验证码已发送", {
         description: "请查看您的邮箱",
       });

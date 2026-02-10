@@ -1,4 +1,4 @@
-import { Home, Package, Calendar, User, NotebookPen, Sparkles, Inbox, Trophy } from 'lucide-react';
+import { Home, Package, Calendar, User, NotebookPen, Sparkles, Inbox, Trophy, Bell } from 'lucide-react';
 import { MenuConfig } from '@/types/menu';
 
 /**
@@ -38,6 +38,12 @@ export const menuConfig: MenuConfig = [
     title: '里程碑',
     path: '/epic',
     icon: Trophy,
+  },
+  {
+    id: 'notification',
+    title: '消息中心',
+    path: '/notification',
+    icon: Bell,
   },
 ];
 

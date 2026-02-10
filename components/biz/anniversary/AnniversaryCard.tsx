@@ -33,6 +33,7 @@ export function AnniversaryCard({
   className,
   patchItem,
 }: AnniversaryCardProps) {
+
   const {
     liked,
     collected,

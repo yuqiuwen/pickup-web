@@ -10,6 +10,8 @@ import "./globals.css";
 import { Inter, Noto_Sans_SC } from "next/font/google";
 
 import "@/utils/dayjs";
+import { MessagesProvider } from "@/contexts/messages-context";
+import { NotificationCenter } from "@/components/biz/notification/NotificationCenter";
 
 
 export const metadata: Metadata = {
@@ -42,10 +44,14 @@ export default function RootLayout({
     <html lang="zh-CN" className={`${inter.variable} ${notoSansSC.variable}`}>
       <body>
         <Providers>
-        <AuthProvider>
-            {children}
-            <Toaster position="top-center" />
-        </AuthProvider>
+          <AuthProvider>
+            <MessagesProvider>
+              {children}
+              <Toaster position="top-center" />
+
+              <NotificationCenter />
+            </MessagesProvider>
+          </AuthProvider>
         </Providers>
       </body>
     </html>

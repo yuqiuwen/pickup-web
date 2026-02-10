@@ -20,8 +20,10 @@ import {
 } from "@/components/ui/sidebar";
 import { MenuItem } from "@/types/menu";
 import Link from "next/link";
+import { useMessages } from "@/contexts/messages-context";
 
 export function NavMain({ items }: { items: MenuItem[] }) {
+  const { openMessages } = useMessages();
   return (
     <SidebarGroup>
       {/* <SidebarGroupLabel>Platform</SidebarGroupLabel> */}
@@ -39,13 +41,23 @@ export function NavMain({ items }: { items: MenuItem[] }) {
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton tooltip={item.title}>
-                      <Link href={item.path} className="flex w-full min-w-0 items-center gap-2">
-                        {item.icon && <item.icon className="shrink-0 h-5 w-5"/>}
-                        <span className="flex-1 truncate">{item.title}</span>
-                      </Link>
-                      {hasChildren && (
-                        <ChevronRight className="ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                      )}
+                      {item.id !== 'notification' ?
+                        <>
+                          <Link href={item.path} className="flex w-full min-w-0 items-center gap-2">
+                            {item.icon && <item.icon className="shrink-0 h-5 w-5" />}
+                            <span className="flex-1 truncate">{item.title}</span>
+                          </Link>
+                          {hasChildren && (
+                            <ChevronRight className="ml-auto shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          )}</> : <a
+                            type="button"
+                            onClick={openMessages}
+                            className="flex w-full min-w-0 items-center gap-2 cursor-pointer"
+                          >
+                          {item.icon && <item.icon className="shrink-0 h-5 w-5" />}
+                          <span className="flex-1 truncate">{item.title}</span>
+                        </a>}
+
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   {hasChildren && (
